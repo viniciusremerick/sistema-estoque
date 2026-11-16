@@ -1,0 +1,7 @@
+# Copie este arquivo para config/db.properties e ajuste os valores.
+# O arquivo config/db.properties NÃO deve ser versionado (já está no .gitignore).
+# Alternativa: definir as variáveis de ambiente DB_URL, DB_USER e DB_PASSWORD
+# (elas têm prioridade sobre o arquivo).
+db.url=jdbc:postgresql://localhost:5432/sistema_estoque
+db.user=postgres
+db.password=TROQUE_ESTA_SENHA
