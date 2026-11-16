@@ -20,5 +20,11 @@
             <artifactId>postgresql</artifactId>
             <version>42.7.14</version>
         </dependency>
+        <!-- BCrypt (hash de senhas) -->
+        <dependency>
+        <groupId>at.favre.lib</groupId>
+        <artifactId>bcrypt</artifactId>
+        <version>0.10.2</version>
+        </dependency>
     </dependencies>
 </project>

@@ -1,65 +1,79 @@
 package br.com.loja.estoque;
 
-import br.com.loja.estoque.dao.AdministradorDAO;
-import br.com.loja.estoque.dao.RoupaDAO;
 import br.com.loja.estoque.exception.EstoqueException;
-import br.com.loja.estoque.model.Administrador;
 import br.com.loja.estoque.model.Roupa;
-import br.com.loja.estoque.model.Tamanho;
+import br.com.loja.estoque.service.AuthService;
+import br.com.loja.estoque.service.RoupaService;
 
-import java.math.BigDecimal;
+import java.util.Scanner;
 
 public class Main {
 
     public static void main(String[] args) {
-        RoupaDAO roupaDAO = new RoupaDAO();
-        AdministradorDAO adminDAO = new AdministradorDAO();
+        Scanner entrada = new Scanner(System.in);
+        AuthService auth = new AuthService();
+        RoupaService service = new RoupaService(auth);
 
         try {
-            // INSERT
-            Roupa r = new Roupa("Camiseta Básica", "Camisetas",
-                    Tamanho.M, "Preta", new BigDecimal("49.90"), 10);
-            roupaDAO.inserir(r);
-            System.out.println("Inserida com id " + r.getId());
+            // 1. Sem login, não pode cadastrar
+            tentarCadastrar(service, "1. sem login          ");
 
-            System.out.println("--- todas ---");
-            roupaDAO.listarTodos().forEach(System.out::println);
-
-            // UPDATE
-            roupaDAO.atualizarQuantidade(r.getId(), 0);
-            System.out.println("--- zeradas ---");
-            roupaDAO.listarZeradas().forEach(System.out::println);
-
-            // FILTROS E BUSCA
-            System.out.println("--- tamanho M ---");
-            roupaDAO.filtrar(Tamanho.M).forEach(System.out::println);
-            System.out.println("--- busca 'camis' ---");
-            roupaDAO.buscarPorNome("camis").forEach(System.out::println);
-
-            // DELETE
-            roupaDAO.excluir(r.getId());
-            System.out.println("Roupas restantes: " + roupaDAO.listarTodos().size());
-
-            // ADMINISTRADOR (hash falso, só para teste)
-            Administrador a = new Administrador("admin_teste", "hash-de-teste");
-            adminDAO.inserir(a);
-            System.out.println(adminDAO.buscarPorUsuario("admin_teste").orElse(null));
-            adminDAO.excluir(a.getId());
-
-            // ERRO ESPERADO: preço zero é barrado pelo banco
-            try {
-                roupaDAO.inserir(new Roupa("Calça", "Calças",
-                        Tamanho.G, "Azul", BigDecimal.ZERO, 5));
-            } catch (EstoqueException ex) {
-                System.out.println("Erro esperado: " + ex.getMessage());
-                System.out.println("Causa: " + ex.getCause().getMessage());
+            // 2. Primeiro acesso: cria o administrador
+            if (!auth.existeAdministrador()) {
+                System.out.println("Primeiro acesso. Crie o administrador.");
+                System.out.print("Usuário (mín. 3 caracteres): ");
+                String usuario = entrada.nextLine();
+                System.out.print("Senha (mín. 6 caracteres): ");
+                String senha = entrada.nextLine();
+                auth.cadastrarAdministrador(usuario, senha);
+                System.out.println("Administrador criado.");
             }
+
+            // 3. Login com senha errada
+            System.out.print("Usuário para login: ");
+            String usuarioLogin = entrada.nextLine();
+            try {
+                auth.login(usuarioLogin, "senha-errada-123");
+            } catch (EstoqueException e) {
+                System.out.println("3. senha errada        -> bloqueado: " + e.getMessage());
+            }
+
+            // 4. Login correto
+            System.out.print("Senha: ");
+            String senhaLogin = entrada.nextLine();
+            auth.login(usuarioLogin, senhaLogin);
+            System.out.println("4. login correto       -> " + auth.getAdministradorLogado());
+
+            // 5. Logado, pode cadastrar
+            tentarCadastrar(service, "5. logado             ");
+            System.out.println("--- roupas ---");
+            service.listarTodos().forEach(System.out::println);
+
+            // Limpeza do teste
+            Roupa teste = service.buscarPorNome("Camiseta Teste").get(0);
+            service.excluir(teste.getId());
+
+            // 6. Depois do logout, volta a bloquear
+            auth.logout();
+            tentarCadastrar(service, "6. após logout        ");
+
+            // 7. Consultas continuam abertas
+            System.out.println("7. consulta sem login  -> " + service.listarTodos().size() + " roupas");
 
         } catch (EstoqueException e) {
             System.out.println("Falha: " + e.getMessage());
             if (e.getCause() != null) {
                 System.out.println("Causa: " + e.getCause().getMessage());
             }
+        }
+    }
+
+    private static void tentarCadastrar(RoupaService service, String descricao) {
+        try {
+            service.cadastrar("Camiseta Teste", "Camisetas", "M", "Preta", "49,90", "10");
+            System.out.println(descricao + "-> cadastrada");
+        } catch (EstoqueException e) {
+            System.out.println(descricao + "-> bloqueado: " + e.getMessage());
         }
     }
 }
