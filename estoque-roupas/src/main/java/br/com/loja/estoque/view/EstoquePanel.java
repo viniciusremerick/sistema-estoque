@@ -57,13 +57,27 @@ public class EstoquePanel extends JPanel {
         tabela.setRowHeight(24);
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+        // Rodapé: total à esquerda, ações do administrador à direita
+        JButton botaoQuantidade = new JButton("Atualizar quantidade");
+        JButton botaoExcluir = new JButton("Excluir peça selecionada");
+
+        JPanel acoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        acoes.add(botaoQuantidade);
+        acoes.add(botaoExcluir);
+
+        JPanel rodape = new JPanel(new BorderLayout());
+        rodape.add(rotuloTotal, BorderLayout.WEST);
+        rodape.add(acoes, BorderLayout.EAST);
+
         add(filtros, BorderLayout.NORTH);
         add(new JScrollPane(tabela), BorderLayout.CENTER);
-        add(rotuloTotal, BorderLayout.SOUTH);
+        add(rodape, BorderLayout.SOUTH);
 
         // Eventos: "quando isso acontecer, execute aquilo"
         botaoBuscar.addActionListener(e -> pesquisar());
         botaoLimpar.addActionListener(e -> limpar());
+        botaoQuantidade.addActionListener(e -> atualizarQuantidadeSelecionada());
+        botaoExcluir.addActionListener(e -> excluirSelecionada());
         campoNome.addActionListener(e -> pesquisar());       // Enter no campo
         campoCategoria.addActionListener(e -> pesquisar());  // Enter no campo
         comboTamanho.addActionListener(e -> pesquisar());    // trocou o tamanho
@@ -83,6 +97,60 @@ public class EstoquePanel extends JPanel {
         } catch (EstoqueException e) {
             JOptionPane.showMessageDialog(this, e.getMessage(),
                     "Erro na consulta", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // RF-05: atualização da quantidade da peça selecionada
+    private void atualizarQuantidadeSelecionada() {
+        int linha = tabela.getSelectedRow();
+
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma peça na tabela para atualizar a quantidade.",
+                    "Atualizar quantidade", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Roupa roupa = modelo.getRoupa(linha);
+
+        if (AcoesEstoque.atualizarQuantidade(this, service, roupa)) {
+            pesquisar();
+        }
+    }
+
+    // RF-06: exclusão da peça selecionada, com confirmação
+    private void excluirSelecionada() {
+        int linha = tabela.getSelectedRow();
+
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma peça na tabela para excluir.",
+                    "Excluir peça", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // A tabela não tem ordenação por clique, então a linha da tela
+        // é a mesma linha do modelo
+        Roupa roupa = modelo.getRoupa(linha);
+
+        int resposta = JOptionPane.showConfirmDialog(this,
+                "Excluir \"" + roupa.getNome() + "\" (" + roupa.getTamanho()
+                        + ", " + roupa.getCor() + ")?\nEsta ação não pode ser desfeita.",
+                "Confirmar exclusão",
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+        if (resposta != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+            service.excluir(roupa.getId());
+            pesquisar(); // recarrega a lista sem a peça excluída
+            JOptionPane.showMessageDialog(this, "Peça excluída com sucesso.",
+                    "Excluir peça", JOptionPane.INFORMATION_MESSAGE);
+        } catch (EstoqueException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(),
+                    "Não foi possível excluir", JOptionPane.WARNING_MESSAGE);
         }
     }
 

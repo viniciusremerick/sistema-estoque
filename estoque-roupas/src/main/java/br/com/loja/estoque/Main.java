@@ -5,6 +5,7 @@ import br.com.loja.estoque.service.AuthService;
 import br.com.loja.estoque.service.RoupaService;
 import br.com.loja.estoque.view.CadastroPanel;
 import br.com.loja.estoque.view.EstoquePanel;
+import br.com.loja.estoque.view.ZeradasPanel;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -16,7 +17,6 @@ import javax.swing.SwingUtilities;
 public class Main {
 
     public static void main(String[] args) {
-        // Todo código de tela do Swing deve rodar na thread própria dele
         SwingUtilities.invokeLater(Main::abrirJanela);
     }
 
@@ -27,16 +27,23 @@ public class Main {
         fazerLoginDeTeste(auth);
 
         EstoquePanel estoque = new EstoquePanel(service);
+        ZeradasPanel zeradas = new ZeradasPanel(service);
         CadastroPanel cadastro = new CadastroPanel(service);
 
         JTabbedPane abas = new JTabbedPane();
         abas.addTab("Estoque", estoque);
+        abas.addTab("Peças zeradas", zeradas);
         abas.addTab("Cadastrar roupa", cadastro);
-        abas.addChangeListener(e -> estoque.pesquisar()); // atualiza ao trocar de aba
 
-        JFrame janela = new JFrame("Estoque de Roupas (teste da Etapa 8)");
+        // Ao trocar de aba, as listas são recarregadas
+        abas.addChangeListener(e -> {
+            estoque.pesquisar();
+            zeradas.carregar();
+        });
+
+        JFrame janela = new JFrame("Estoque de Roupas (teste da Etapa 9)");
         janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        janela.setSize(900, 500);
+        janela.setSize(950, 520);
         janela.setLocationRelativeTo(null);
         janela.add(abas);
         janela.setVisible(true);
