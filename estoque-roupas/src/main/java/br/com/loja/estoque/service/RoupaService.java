@@ -1,5 +1,5 @@
 package br.com.loja.estoque.service;
-
+import java.util.ArrayList;
 import br.com.loja.estoque.dao.RoupaDAO;
 import br.com.loja.estoque.exception.EstoqueException;
 import br.com.loja.estoque.exception.ValidacaoException;
@@ -118,6 +118,25 @@ public class RoupaService {
 
     public List<Roupa> listarZeradas() throws EstoqueException {
         return roupaDAO.listarZeradas();
+    }
+
+    // Busca combinada: nome + tamanho + categoria (qualquer um pode ficar em branco)
+    public List<Roupa> pesquisar(String nome, String tamanho, String categoria)
+            throws EstoqueException {
+        List<Roupa> filtradas = filtrar(tamanho, categoria);
+
+        if (nome == null || nome.isBlank()) {
+            return filtradas;
+        }
+
+        String termo = nome.trim().toLowerCase();
+        List<Roupa> resultado = new ArrayList<>();
+        for (Roupa roupa : filtradas) {
+            if (roupa.getNome().toLowerCase().contains(termo)) {
+                resultado.add(roupa);
+            }
+        }
+        return resultado;
     }
 
     // ========== VALIDAÇÕES (privadas) ==========
