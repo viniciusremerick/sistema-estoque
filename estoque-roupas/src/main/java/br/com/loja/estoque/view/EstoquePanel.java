@@ -31,6 +31,9 @@ public class EstoquePanel extends JPanel {
     private final JTextField campoCategoria = new JTextField(12);
     private final JLabel rotuloTotal = new JLabel(" ");
 
+    private final JButton botaoQuantidade = new JButton("Atualizar quantidade");
+    private final JButton botaoExcluir = new JButton("Excluir peça selecionada");
+
     public EstoquePanel(RoupaService service) {
         this.service = service;
         montarTela();
@@ -58,8 +61,6 @@ public class EstoquePanel extends JPanel {
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         // Rodapé: total à esquerda, ações do administrador à direita
-        JButton botaoQuantidade = new JButton("Atualizar quantidade");
-        JButton botaoExcluir = new JButton("Excluir peça selecionada");
 
         JPanel acoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         acoes.add(botaoQuantidade);
@@ -152,6 +153,11 @@ public class EstoquePanel extends JPanel {
             JOptionPane.showMessageDialog(this, e.getMessage(),
                     "Não foi possível excluir", JOptionPane.WARNING_MESSAGE);
         }
+    }
+    // Chamado pela janela principal conforme quem está logado
+    public void setModoAdministrador(boolean administrador) {
+        botaoQuantidade.setEnabled(administrador);
+        botaoExcluir.setEnabled(administrador);
     }
 
     private void limpar() {

@@ -5,7 +5,7 @@ import br.com.loja.estoque.exception.EstoqueException;
 import br.com.loja.estoque.exception.ValidacaoException;
 import br.com.loja.estoque.model.Roupa;
 import br.com.loja.estoque.model.Tamanho;
-
+import br.com.loja.estoque.model.ResumoEstoque;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -118,6 +118,26 @@ public class RoupaService {
 
     public List<Roupa> listarZeradas() throws EstoqueException {
         return roupaDAO.listarZeradas();
+    }
+    // Números do painel inicial
+    public ResumoEstoque obterResumo() throws EstoqueException {
+        List<Roupa> todas = roupaDAO.listarTodos();
+
+        int unidades = 0;
+        int zeradas = 0;
+        BigDecimal valorTotal = BigDecimal.ZERO;
+
+        for (Roupa roupa : todas) {
+            unidades += roupa.getQuantidade();
+            if (roupa.estaZerada()) {
+                zeradas++;
+            }
+            BigDecimal valorDaPeca = roupa.getPreco()
+                    .multiply(BigDecimal.valueOf(roupa.getQuantidade()));
+            valorTotal = valorTotal.add(valorDaPeca);
+        }
+
+        return new ResumoEstoque(todas.size(), unidades, zeradas, valorTotal);
     }
 
     // Busca combinada: nome + tamanho + categoria (qualquer um pode ficar em branco)

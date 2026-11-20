@@ -25,6 +25,8 @@ public class ZeradasPanel extends JPanel {
     private final RoupaTableModel modelo = new RoupaTableModel();
     private final JTable tabela = new JTable(modelo);
     private final JLabel rotuloAlerta = new JLabel(" ");
+    private final JButton botaoRepor =
+            new JButton("Atualizar quantidade da peça selecionada");
 
     public ZeradasPanel(RoupaService service) {
         this.service = service;
@@ -42,7 +44,6 @@ public class ZeradasPanel extends JPanel {
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JButton botaoAtualizarLista = new JButton("Atualizar lista");
-        JButton botaoRepor = new JButton("Atualizar quantidade da peça selecionada");
 
         JPanel rodape = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rodape.add(botaoAtualizarLista);
@@ -73,6 +74,10 @@ public class ZeradasPanel extends JPanel {
             JOptionPane.showMessageDialog(this, e.getMessage(),
                     "Erro na consulta", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    public void setModoAdministrador(boolean administrador) {
+        botaoRepor.setEnabled(administrador);
     }
 
     private void atualizarQuantidadeSelecionada() {
