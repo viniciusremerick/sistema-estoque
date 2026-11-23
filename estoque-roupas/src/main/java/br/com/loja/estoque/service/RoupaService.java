@@ -61,7 +61,22 @@ public class RoupaService {
         }
         roupaDAO.atualizar(roupa);
     }
+    // Sobrecarga: atualiza todos os dados da peça a partir dos textos digitados
+    public void atualizar(int id, String nome, String categoria, String tamanho,
+                          String cor, String preco, String quantidade) throws EstoqueException {
+        authService.exigirAutenticacao();
 
+        Roupa roupa = new Roupa(
+                id,
+                validarTexto(nome, "Nome", 100),
+                validarTexto(categoria, "Categoria", 50),
+                converterTamanho(tamanho),
+                validarTexto(cor, "Cor", 30),
+                converterPreco(preco),
+                converterInteiro(quantidade, "Quantidade"));
+
+        atualizar(roupa);
+    }
     public void atualizarQuantidade(int id, int novaQuantidade) throws EstoqueException {
         authService.exigirAutenticacao();
         validarQuantidade(novaQuantidade);

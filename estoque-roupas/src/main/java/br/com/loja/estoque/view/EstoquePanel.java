@@ -14,6 +14,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.util.List;
@@ -30,7 +31,7 @@ public class EstoquePanel extends JPanel {
             new JComboBox<>(new String[]{"Todos", "P", "M", "G", "GG"});
     private final JTextField campoCategoria = new JTextField(12);
     private final JLabel rotuloTotal = new JLabel(" ");
-
+    private final JButton botaoEditar = new JButton("Editar peça");               // NOVO
     private final JButton botaoQuantidade = new JButton("Atualizar quantidade");
     private final JButton botaoExcluir = new JButton("Excluir peça selecionada");
 
@@ -61,8 +62,8 @@ public class EstoquePanel extends JPanel {
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         // Rodapé: total à esquerda, ações do administrador à direita
-
         JPanel acoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        acoes.add(botaoEditar);                                                   // NOVO
         acoes.add(botaoQuantidade);
         acoes.add(botaoExcluir);
 
@@ -77,6 +78,7 @@ public class EstoquePanel extends JPanel {
         // Eventos: "quando isso acontecer, execute aquilo"
         botaoBuscar.addActionListener(e -> pesquisar());
         botaoLimpar.addActionListener(e -> limpar());
+        botaoEditar.addActionListener(e -> editarSelecionada());                  // NOVO
         botaoQuantidade.addActionListener(e -> atualizarQuantidadeSelecionada());
         botaoExcluir.addActionListener(e -> excluirSelecionada());
         campoNome.addActionListener(e -> pesquisar());       // Enter no campo
@@ -98,6 +100,35 @@ public class EstoquePanel extends JPanel {
         } catch (EstoqueException e) {
             JOptionPane.showMessageDialog(this, e.getMessage(),
                     "Erro na consulta", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Chamado pela janela principal conforme quem está logado
+    public void setModoAdministrador(boolean administrador) {
+        botaoEditar.setEnabled(administrador);                                    // NOVO
+        botaoQuantidade.setEnabled(administrador);
+        botaoExcluir.setEnabled(administrador);
+    }
+
+    // NOVO: edição de todos os dados da peça selecionada
+    private void editarSelecionada() {
+        int linha = tabela.getSelectedRow();
+
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma peça na tabela para editar.",
+                    "Editar peça", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Roupa roupa = modelo.getRoupa(linha);
+
+        EdicaoDialog dialogo = new EdicaoDialog(
+                SwingUtilities.getWindowAncestor(this), service, roupa);
+        dialogo.setVisible(true); // aqui o programa espera o diálogo fechar
+
+        if (dialogo.foiSalvo()) {
+            pesquisar();
         }
     }
 
@@ -153,11 +184,6 @@ public class EstoquePanel extends JPanel {
             JOptionPane.showMessageDialog(this, e.getMessage(),
                     "Não foi possível excluir", JOptionPane.WARNING_MESSAGE);
         }
-    }
-    // Chamado pela janela principal conforme quem está logado
-    public void setModoAdministrador(boolean administrador) {
-        botaoQuantidade.setEnabled(administrador);
-        botaoExcluir.setEnabled(administrador);
     }
 
     private void limpar() {
